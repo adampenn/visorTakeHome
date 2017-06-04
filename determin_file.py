@@ -49,24 +49,24 @@ pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 # create CSV for result output
 with open('analysis.csv', 'w', newline='') as csvfile:
-  analysis = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-  analysis.writerow({'Filename', 'Catagory', 'Error', 'Customer Name'})
+  analysis = csv.writer(csvfile, delimiter='\t')
+  analysis.writerow(['Filename', 'Catagory', 'Error', 'Customer Name'])
 
   # analyse files
   os.chdir(sys.argv[1])
   for filename in os.listdir("."):
-    print("Working on: " + filename);
+    print("\nWorking on: " + filename);
     converted, err = convert_image(filename)
     if converted:
       proc, result, err = run_sub_prog("../file_type_nbc.rb image_text")
       proc = run_sub_prog(("display -resize 750x750 -geometry 750x750 " + filename))
-      print("image catogarized as " + result.decode())
+      print("image catogarized as " + result.decode().rstrip())
       input("Hit enter to exit the image\n")
       proc.kill()
       os.remove("../image_text")
-      analysis.writerow({filename, result.decode(), '', 'FINISH THIS NAME'})
+      analysis.writerow([filename, result.decode().rstrip(), 'NONE', 'FINISH THIS NAME'])
     else:
-      analysis.writerow({filename, '', err, ''})
+      analysis.writerow([filename, 'N/A', err, 'N/A'])
 
 
 

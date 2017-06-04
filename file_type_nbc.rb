@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-Dir.chdir("/home/adam/visor_take_home")
+Dir.chdir("/home/adam/visorTakeHome")
 
 # Read in description and split it into words
 w2Dictionary = File.read('w2_learn_files/W2_Learn_File.txt').split("\n")
