@@ -14,16 +14,23 @@ from subprocess import Popen, PIPE
 
 
 def convert_image(filename):
-  # open a file to store the output of the file being determined
-  try:
-    fp = open('../image_text', 'w')
-    fp.write(pytesseract.image_to_string(Image.open(filename)))
+  # open a file to store the output of the file being determinedA
+  fp = open('../image_text', 'w')
+  if filename.lower().endswith(('.pdf')):
+    proc, out, err = run_sub_prog("../pdf_to_text.py " + filename)
+    fp.write(out.decode())
     fp.close()
     return True, ""
-  except IOError as err:
-    error_message = "could not read {0}: {1}".format(filename, err)
-    print(error_message)
-    return False, error_message
+  else:
+    try:
+      fp.write(pytesseract.image_to_string(Image.open(filename)))
+      fp.close()
+      return True, ""
+    except IOError as err:
+      error_message = "could not read {0}: {1}".format(filename, err)
+      print(error_message)
+      fp.close()
+      return False, error_message
 
 
 def run_sub_prog(cmd):
@@ -37,36 +44,36 @@ def run_sub_prog(cmd):
     return proc, out, err
 
 
+def main():
+  # check for user input -- error if non given
+  if len(sys.argv) != 2:
+    print("No input file directory given")
+    print("Usage: python3 readimages.py <dir of images>")
+    sys.exit()
+  
+  # set the path for tesseract
+  pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+ 
+  # create CSV for result output
+  with open('analysis.csv', 'w', newline='') as csvfile:
+    analysis = csv.writer(csvfile, delimiter='\t')
+    analysis.writerow(['Filename', 'Catagory', 'Error', 'Customer Name'])
 
-# check for user input -- error if non given
-if len(sys.argv) != 2:
-  print("No input file directory given")
-  print("Usage: python3 readimages.py <dir of images>")
-  sys.exit()
+    # analyse files
+    os.chdir(sys.argv[1])
+    for filename in os.listdir("."):
+      print("\nWorking on: " + filename);
+      converted, err = convert_image(filename)
+      if converted:
+        proc, result, err = run_sub_prog("../file_type_nbc.rb image_text")
+        proc = run_sub_prog(("display -resize 750x750 -geometry 750x750 " + filename))
+        print("image catogarized as " + result.decode().rstrip())
+        #input("Hit enter to exit the image\n")
+        proc.kill()
+        os.remove("../image_text")
+        analysis.writerow([filename, result.decode().rstrip(), 'NONE', 'FINISH THIS NAME'])
+      else:
+        analysis.writerow([filename, 'N/A', err, 'N/A'])
 
-# set the path for tesseract
-pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-
-# create CSV for result output
-with open('analysis.csv', 'w', newline='') as csvfile:
-  analysis = csv.writer(csvfile, delimiter='\t')
-  analysis.writerow(['Filename', 'Catagory', 'Error', 'Customer Name'])
-
-  # analyse files
-  os.chdir(sys.argv[1])
-  for filename in os.listdir("."):
-    print("\nWorking on: " + filename);
-    converted, err = convert_image(filename)
-    if converted:
-      proc, result, err = run_sub_prog("../file_type_nbc.rb image_text")
-      proc = run_sub_prog(("display -resize 750x750 -geometry 750x750 " + filename))
-      print("image catogarized as " + result.decode().rstrip())
-      input("Hit enter to exit the image\n")
-      proc.kill()
-      os.remove("../image_text")
-      analysis.writerow([filename, result.decode().rstrip(), 'NONE', 'FINISH THIS NAME'])
-    else:
-      analysis.writerow([filename, 'N/A', err, 'N/A'])
-
-
+main()
 

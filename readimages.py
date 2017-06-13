@@ -6,27 +6,22 @@ except ImportError:
   from PIL import Image
 import pytesseract
 import os
+import sys
 
 pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
-os.chdir('/home/adam/visor_take_home/w2_learn_files')
+# check for user input -- error if non given
+if len(sys.argv) != 3:
+  print("Usage: python3 readimages.py <dir of images> <output file>")
+  sys.exit()
 
-f = open('W2_Learn_File.txt', 'w')
+os.chdir(sys.argv[1])
 
-for filename in os.listdir('/home/adam/visor_take_home/w2_learn_files'):
-  if str(filename) != "W2_Learn_File.txt":
+f = open(sys.argv[2], 'w')
+
+for filename in os.listdir(sys.argv[1]):
+  if str(filename) != sys.argv[2]:
     print("reading file: " + filename)
     f.write(pytesseract.image_to_string(Image.open(filename)))
-
-
-os.chdir('/home/adam/visor_take_home/1099_learn_files')
-
-f = open('1099_Learn_File.txt', 'w')
-
-for filename in os.listdir('/home/adam/visor_take_home/1099_learn_files'):
-  if str(filename) != "1099_Learn_File.txt":
-    print("reading file: " + filename)
-    f.write(pytesseract.image_to_string(Image.open(filename)))
-
-
+f.close()
 
